@@ -1,0 +1,16 @@
+# package directories
+node_modules
+jspm_packages
+
+# Serverless directories
+.serverless
+.build
+
+.idea
+*.iml
+.env
+src/accountMapping.*
+!src/accountMapping.example.json
+
+.DS_Store
+.claude/
