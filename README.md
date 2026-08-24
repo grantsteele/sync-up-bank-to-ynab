@@ -40,8 +40,13 @@ have this running in well under an hour.
 | A [YNAB](https://www.ynab.com/) account | The budget you're syncing to | Paid (YNAB subscription) |
 | An [AWS](https://aws.amazon.com/) account | Hosts the small bit of code that does the syncing | Free — this project runs comfortably within AWS's free tier, so it should cost $0/month |
 
-You do **not** need to already have git, Node.js, or Yarn installed — Step 1 below installs all of them from
-scratch. If "Lambda" and "serverless" are unfamiliar terms, don't worry, that's exactly what Step 5 walks through.
+You do **not** need to already have Node.js or Yarn installed — Step 1 below installs them from scratch. If
+"Lambda" and "serverless" are unfamiliar terms, don't worry, that's exactly what Step 5 walks through.
+
+This guide keeps the terminal to a minimum — you'll only use it for one-off tool installs, a couple of quick API
+lookups (copy-paste commands, no editing involved), and the final deploy step. All the file editing (downloading
+the code, filling in your account details) is done in Finder/File Explorer and a regular text editor instead, since
+that's a much easier way to work with files if you're not used to a terminal.
 
 ---
 
@@ -57,18 +62,16 @@ These are one-off installs. If you already have one of these, you can skip it.
    ```
    Follow any on-screen instructions it gives you (it may ask you to run one or two more commands to finish
    adding it to your PATH — copy and run whatever it prints).
-2. Use it to install git, Node.js, and Yarn:
+2. Use it to install Node.js and Yarn:
    ```bash
-   brew install git node yarn
+   brew install node yarn
    ```
 
 **On Windows:**
 
-1. Install **git** from https://git-scm.com/download/win — download the installer and click through it with the
-   default options.
-2. Install **Node.js** from https://nodejs.org/ — download the "LTS" version installer and click through it with
+1. Install **Node.js** from https://nodejs.org/ — download the "LTS" version installer and click through it with
    the default options.
-3. Open **Command Prompt** (search for it in the Start menu) and install Yarn:
+2. Open **Command Prompt** (search for it in the Start menu) and install Yarn:
    ```bash
    npm install -g yarn
    ```
@@ -76,50 +79,39 @@ These are one-off installs. If you already have one of these, you can skip it.
 **Check it worked** (Mac Terminal or Windows Command Prompt):
 
 ```bash
-git --version
 node --version
 yarn --version
 ```
 
-Each command should print a version number. If any of them say "command not found," close and reopen your
+Each command should print a version number. If either says "command not found," close and reopen your
 terminal/command prompt and try again — sometimes a restart is needed for the new tools to be recognised.
+
+**You'll also want a text editor** for the config files you'll edit in a couple of steps (not writing code, just
+filling in values). If you don't already have one, install [VS Code](https://code.visualstudio.com/) (free, Mac and
+Windows) — plain text editors like TextEdit (Mac) or Notepad (Windows) work too, just avoid anything that
+auto-formats text like Word or Pages.
 
 ---
 
-### Step 2 — Get the code
+### Step 2 — Download the code
 
-A fresh terminal/command prompt window normally starts you in your **home folder** — on Mac that's
-`/Users/<your-username>`, on Windows it's `C:\Users\<your-username>`. That's also where the project will land, unless
-you `cd` somewhere else first. If you'd rather it go somewhere specific (like your Desktop), navigate there first,
-e.g. `cd Desktop` (Mac) or `cd Desktop` (Windows) — otherwise just run the commands below as-is and it'll end up in
-your home folder.
+This repo is private, so you'll need to be logged into GitHub as the account it's shared with to download it.
 
-In your terminal/command prompt, run:
+1. Open the repo in your browser: `<this-repo-url>`.
+2. Click the green **Code** button, then **Download ZIP**.
+3. Find the downloaded ZIP (usually in your **Downloads** folder) and extract/unzip it. On Mac, just double-click
+   it. On Windows, right-click it and choose **Extract All...**.
+4. Move the extracted folder somewhere you'll remember, e.g. your **Desktop** — you'll be going back into it in
+   every step from here on.
 
-```bash
-git clone <this-repo-url>
-cd sync-up-bank-to-ynab
-yarn
-```
+Now open that folder in your text editor so you can browse and edit its files:
 
-This creates a new folder called `sync-up-bank-to-ynab` (wherever your terminal was pointed at) containing all the
-project's files, and `yarn` downloads all the code libraries it depends on. This can take a minute or two.
+- **VS Code**: go to **File → Open Folder** (Mac: **File → Open...**) and select the folder.
+- **TextEdit/Notepad**: you'll instead open individual files directly from Finder/File Explorer as you go —
+  right-click a file → **Open With** → your editor.
 
-**You'll also need a text editor** for a couple of later steps (editing a couple of config files — not writing
-code). If you don't already have one, install [VS Code](https://code.visualstudio.com/) (free, Mac and Windows).
-Once it's installed, open the project folder in it:
-
-- In VS Code, go to **File → Open Folder** (Mac: **File → Open...**).
-- In the picker that opens, navigate to wherever your terminal was pointed at when you ran `git clone` — your home
-  folder, or Desktop, or wherever you `cd`'d to — and select the `sync-up-bank-to-ynab` folder.
-- If you're not sure where it ended up, run `pwd` (Mac) or `cd` with no arguments (Windows) in the same terminal
-  window right after Step 2 — it'll print the full path you're currently in, and `sync-up-bank-to-ynab` will be a
-  folder inside it.
-
-Once it's open, you'll see a file/folder list down the left-hand side — that's how you'll get to `src/accountMapping.json`
-and `.env` in later steps. Plain text editors like TextEdit (Mac) or Notepad (Windows) also work for editing
-individual files, just avoid anything that auto-formats text like Word or Pages — you'd still need Finder/File
-Explorer to browse to the folder in that case.
+Once it's open in VS Code, you'll see a file/folder list down the left-hand side — that's how you'll get to
+`src/accountMapping.json` and `.env` in later steps.
 
 ---
 
@@ -201,13 +193,15 @@ deploy in Step 8.
 
 This is the "which account goes where" configuration.
 
-1. Copy the example file to create your real one:
-   ```bash
-   cp src/accountMapping.example.json src/accountMapping.json
-   ```
-   (This file is gitignored — it holds your personal account details and is never committed to the repo.)
+1. In the `src` folder, find `accountMapping.example.json`. Make a copy of it in the same folder (Mac Finder:
+   right-click → **Duplicate**; Windows Explorer: right-click → **Copy**, then **Paste**), and rename the copy to
+   `accountMapping.json` — i.e. just remove `.example` from the name. In VS Code you can instead right-click the
+   file in the sidebar and choose **Copy**, then **Paste**, then rename it.
 
-2. Open `src/accountMapping.json` in your text editor (in VS Code, it'll be in the `src` folder in the sidebar on
+   (This file is gitignored — it holds your personal account details and is never committed to the repo, so keeping
+   `accountMapping.json` as a separate file from the `.example` one matters.)
+
+2. Open `accountMapping.json` in your text editor (in VS Code, it'll be in the `src` folder in the sidebar on
    the left). You'll want one entry for:
    - Your Up **transactional** account
    - Each individual Up **Saver** you want tracked separately in YNAB
@@ -237,15 +231,18 @@ This is the "which account goes where" configuration.
 
 ### Step 7 — Add your secret keys
 
-1. Copy the example env file:
-   ```bash
-   cp .env.example .env
-   ```
-   (Also gitignored — never committed.)
+1. In the project's top-level folder, find `.env.example` and make a copy of it named `.env` (also gitignored —
+   never committed). Files starting with a dot are treated as "hidden" by Mac/Windows, which makes copying them in
+   Finder/File Explorer fiddly, so it's easiest to do this from your text editor instead:
+   - **VS Code**: open `.env.example`, then use **File → Save As...**, and save it as `.env` in the same folder
+     (just change the filename, don't change the folder).
+   - **TextEdit/Notepad**: open `.env.example`, use **Save As...**, and save as `.env` in the same folder — on
+     Windows, make sure "Save as type" is set to **All Files** so it doesn't add a `.txt` on the end.
 
-2. Open `.env` in your text editor (it won't show up in some file browsers since it starts with a dot — in VS
-   Code's sidebar it'll still be listed, in Finder/Explorer you may need to enable "show hidden files") and fill
-   in:
+   You should now have both `.env.example` (leave this one alone) and `.env` (this is the one you'll edit) in the
+   same folder.
+
+2. Open `.env` in your text editor and fill in:
    - `UP_API_KEY` — from Step 3
    - `YNAB_API_KEY` — from Step 4
    - `YNAB_BUDGET_ID` — open your budget in YNAB, the URL looks like `https://app.youneedabudget.com/<budget-id>` —
@@ -254,22 +251,36 @@ This is the "which account goes where" configuration.
 
 ---
 
-### Step 8 — Deploy it
+### Step 8 — Install dependencies and deploy
 
-1. Run:
+All your editing is done — this last step needs the terminal again, just to run a couple of commands.
+
+1. Open a terminal/command prompt **inside the project folder** (rather than opening a blank one and typing `cd`):
+   - **Mac**: right-click the project folder → **Services → New Terminal at Folder**. If you don't see that
+     option, open Terminal normally and drag the project folder from Finder onto the Terminal window — it'll fill
+     in the full path for you — then press Enter.
+   - **Windows**: open the project folder in File Explorer, click the address bar, type `cmd`, and press Enter.
+
+2. Install the project's dependencies:
+   ```bash
+   yarn
+   ```
+   This can take a minute or two.
+
+3. Deploy:
    ```bash
    yarn sls deploy
    ```
    This is the Serverless Framework packaging up the code and creating everything it needs in AWS. It can take a
    few minutes the first time.
 
-2. When it finishes, look for a line under `endpoints` that looks like:
+4. When it finishes, look for a line under `endpoints` that looks like:
    ```
    POST - https://xxxxxx.execute-api.ap-southeast-2.amazonaws.com/prod/webhook/up
    ```
    Copy that whole URL — this is the address Up will send transaction notifications to.
 
-3. Register that address with Up as a webhook (replace `<UP_API_KEY>` and `<ENDPOINT>` with your values):
+5. Register that address with Up as a webhook (replace `<UP_API_KEY>` and `<ENDPOINT>` with your values):
    ```bash
    curl https://api.up.com.au/api/v1/webhooks \
      -XPOST \
@@ -285,9 +296,10 @@ This is the "which account goes where" configuration.
      }'
    ```
 
-4. The response includes a `secretKey` — copy it into `UP_WEBHOOK_SECRET` in your `.env` file.
+6. The response includes a `secretKey` — copy it into `UP_WEBHOOK_SECRET` in your `.env` file (back in your text
+   editor).
 
-5. Deploy one more time so the webhook secret takes effect:
+7. Deploy one more time so the webhook secret takes effect:
    ```bash
    yarn sls deploy
    ```
