@@ -152,8 +152,21 @@ which means creating an AWS account and a set of "access keys."
    It'll ask you for:
    - **AWS Access Key ID** — paste the one from step 2
    - **AWS Secret Access Key** — paste the one from step 2
-   - **Default region name** — use `ap-southeast-2` (Sydney) to match this project's default, or your closest AWS
-     region
+   - **Default region name** — this just picks which AWS data centre your code runs in; pick whichever is closest
+     to you for the best performance, or use `ap-southeast-2` (Sydney) to match this project's default. Some
+     common ones:
+
+     | Region code | Location |
+     |---|---|
+     | `ap-southeast-2` | Sydney |
+     | `us-east-1` | N. Virginia, USA |
+     | `us-west-2` | Oregon, USA |
+     | `eu-west-1` | Ireland |
+     | `eu-central-1` | Frankfurt, Germany |
+     | `ap-southeast-1` | Singapore |
+     | `ap-south-1` | Mumbai, India |
+
+     For the full list, see AWS's [Regions and Zones reference](https://docs.aws.amazon.com/AWSEC2/latest/UserGuide/using-regions-availability-zones.html#concepts-available-regions).
    - **Default output format** — you can just press Enter to leave this blank
 
 That's it — AWS is now set up, and the Serverless Framework will use these credentials automatically when you
