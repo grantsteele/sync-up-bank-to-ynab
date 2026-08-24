@@ -210,8 +210,12 @@ This is the "which account goes where" configuration.
 2. Open `src/accountMapping.json` in your text editor (in VS Code, it'll be in the `src` folder in the sidebar on
    the left). You'll want one entry for:
    - Your Up **transactional** account
-   - A **catchall** account (for any Up Saver you don't map individually) — give this one `"upId": "UP_CATCHALL"`
    - Each individual Up **Saver** you want tracked separately in YNAB
+   - A **catchall** account — give this one `"upId": "UP_CATCHALL"`. This is where transactions land for any Up
+     account you *haven't* mapped individually, so it's a safety net for accounts you open later or forget to add.
+     **You can skip this entry entirely if you're going to map every single Up account you have individually** —
+     just remember any new Up Saver you open in future will need its own entry added, since there won't be a
+     catchall to fall back to.
 
    The `name` field is just a label for your own reference — it isn't used by the code.
 
@@ -221,7 +225,9 @@ This is the "which account goes where" configuration.
    ```
    This lists all your Up accounts along with their `id`. Copy the relevant `id` into `upId` for each mapping.
 
-4. In YNAB, create an account for each: the Up transactional account, each mapped Saver, and a catchall account.
+4. In YNAB, you need an account for each mapping: the Up transactional account, each mapped Saver, and the catchall
+   (if you're using one). If you've already got matching YNAB accounts set up (e.g. from manually tracking these
+   before), you don't need to create new ones — just use your existing accounts in the next step.
 
 5. For each YNAB account, open it and look at the URL — it'll look like
    `https://app.youneedabudget.com/<budget-id>/accounts/<account-id>`. Copy the `<account-id>` part into `ynabId`
