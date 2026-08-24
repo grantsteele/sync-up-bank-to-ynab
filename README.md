@@ -35,19 +35,60 @@ have this running in well under an hour.
 
 | Thing | What it's for | Cost |
 |---|---|---|
-| A computer with [Node.js](https://nodejs.org/) and [Yarn](https://yarnpkg.com/) installed | To run the setup commands | Free |
+| A Mac or Windows computer | To run the setup commands | — |
 | An [Up Bank](https://up.com.au) account | The bank you're syncing from | Free |
 | A [YNAB](https://www.ynab.com/) account | The budget you're syncing to | Paid (YNAB subscription) |
 | An [AWS](https://aws.amazon.com/) account | Hosts the small bit of code that does the syncing | Free — this project runs comfortably within AWS's free tier, so it should cost $0/month |
 
-If Node/Yarn, AWS, "Lambda", and "serverless" are all new to you, don't worry — that's exactly what the AWS section
-below walks through.
+You do **not** need to already have git, Node.js, or Yarn installed — Step 1 below installs all of them from
+scratch. If "Lambda" and "serverless" are unfamiliar terms, don't worry, that's exactly what Step 5 walks through.
 
 ---
 
-### Step 1 — Get the code
+### Step 1 — Install the tools you need
 
-Open a terminal and run:
+These are one-off installs. If you already have one of these, you can skip it.
+
+**On a Mac:**
+
+1. Install **Homebrew** (a package installer for Mac) by opening the **Terminal** app and running:
+   ```bash
+   /bin/bash -c "$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/HEAD/install.sh)"
+   ```
+   Follow any on-screen instructions it gives you (it may ask you to run one or two more commands to finish
+   adding it to your PATH — copy and run whatever it prints).
+2. Use it to install git, Node.js, and Yarn:
+   ```bash
+   brew install git node yarn
+   ```
+
+**On Windows:**
+
+1. Install **git** from https://git-scm.com/download/win — download the installer and click through it with the
+   default options.
+2. Install **Node.js** from https://nodejs.org/ — download the "LTS" version installer and click through it with
+   the default options.
+3. Open **Command Prompt** (search for it in the Start menu) and install Yarn:
+   ```bash
+   npm install -g yarn
+   ```
+
+**Check it worked** (Mac Terminal or Windows Command Prompt):
+
+```bash
+git --version
+node --version
+yarn --version
+```
+
+Each command should print a version number. If any of them say "command not found," close and reopen your
+terminal/command prompt and try again — sometimes a restart is needed for the new tools to be recognised.
+
+---
+
+### Step 2 — Get the code
+
+In your terminal/command prompt, run:
 
 ```bash
 git clone <this-repo-url>
@@ -59,7 +100,7 @@ yarn
 
 ---
 
-### Step 2 — Get your Up Bank API key
+### Step 3 — Get your Up Bank API key
 
 1. Go to https://api.up.com.au/getting_started.
 2. Log in with your Up account and generate a **Personal Access Token**.
@@ -67,7 +108,7 @@ yarn
 
 ---
 
-### Step 3 — Get your YNAB API key
+### Step 4 — Get your YNAB API key
 
 1. Go to https://app.youneedabudget.com/settings/developer.
 2. Click **New Token**, confirm your password, and copy the token that's shown. YNAB only shows it once, so keep
@@ -75,7 +116,7 @@ yarn
 
 ---
 
-### Step 4 — Set up AWS (the part that trips people up)
+### Step 5 — Set up AWS (the part that trips people up)
 
 **In plain terms:** AWS Lambda is Amazon's way of running a small piece of code on demand, without you having to
 own or manage a server. You're not "hosting a website" or "renting a computer" — you're just telling AWS "run this
@@ -116,11 +157,11 @@ which means creating an AWS account and a set of "access keys."
    - **Default output format** — you can just press Enter to leave this blank
 
 That's it — AWS is now set up, and the Serverless Framework will use these credentials automatically when you
-deploy in Step 7.
+deploy in Step 8.
 
 ---
 
-### Step 5 — Tell the project which Up accounts map to which YNAB accounts
+### Step 6 — Tell the project which Up accounts map to which YNAB accounts
 
 This is the "which account goes where" configuration.
 
@@ -137,7 +178,7 @@ This is the "which account goes where" configuration.
 
    The `name` field is just a label for your own reference — it isn't used by the code.
 
-3. Get your Up account IDs by running (replace `<UP_API_KEY>` with the key from Step 2):
+3. Get your Up account IDs by running (replace `<UP_API_KEY>` with the key from Step 3):
    ```bash
    curl https://api.up.com.au/api/v1/accounts -G -H 'Authorization: Bearer <UP_API_KEY>'
    ```
@@ -151,7 +192,7 @@ This is the "which account goes where" configuration.
 
 ---
 
-### Step 6 — Add your secret keys
+### Step 7 — Add your secret keys
 
 1. Copy the example env file:
    ```bash
@@ -160,15 +201,15 @@ This is the "which account goes where" configuration.
    (Also gitignored — never committed.)
 
 2. Open `.env` and fill in:
-   - `UP_API_KEY` — from Step 2
-   - `YNAB_API_KEY` — from Step 3
+   - `UP_API_KEY` — from Step 3
+   - `YNAB_API_KEY` — from Step 4
    - `YNAB_BUDGET_ID` — open your budget in YNAB, the URL looks like `https://app.youneedabudget.com/<budget-id>` —
      copy the `<budget-id>` part
-   - Leave `UP_WEBHOOK_SECRET` blank for now — you'll fill this in during Step 7
+   - Leave `UP_WEBHOOK_SECRET` blank for now — you'll fill this in during Step 8
 
 ---
 
-### Step 7 — Deploy it
+### Step 8 — Deploy it
 
 1. Run:
    ```bash
@@ -221,7 +262,9 @@ You're done! Spend some money on your Up card and watch it land, unapproved, in 
 - **Nothing shows up in YNAB** — double check `src/accountMapping.json` has the right Up/YNAB account IDs, and that
   `UP_WEBHOOK_SECRET` in `.env` matches the `secretKey` from Up's webhook registration response, then redeploy.
 - **`aws configure` / deploy fails with a permissions or credentials error** — re-check the Access Key ID/Secret
-  from Step 4 were entered correctly, and that the IAM user has the `AdministratorAccess` permission attached.
+  from Step 5 were entered correctly, and that the IAM user has the `AdministratorAccess` permission attached.
+- **A command says "command not found" or "not recognized"** — close and reopen your terminal/command prompt so it
+  picks up the newly installed tools, then try again.
 
 ---
 
