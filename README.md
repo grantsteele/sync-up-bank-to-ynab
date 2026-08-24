@@ -88,6 +88,12 @@ terminal/command prompt and try again — sometimes a restart is needed for the 
 
 ### Step 2 — Get the code
 
+A fresh terminal/command prompt window normally starts you in your **home folder** — on Mac that's
+`/Users/<your-username>`, on Windows it's `C:\Users\<your-username>`. That's also where the project will land, unless
+you `cd` somewhere else first. If you'd rather it go somewhere specific (like your Desktop), navigate there first,
+e.g. `cd Desktop` (Mac) or `cd Desktop` (Windows) — otherwise just run the commands below as-is and it'll end up in
+your home folder.
+
 In your terminal/command prompt, run:
 
 ```bash
@@ -96,13 +102,24 @@ cd sync-up-bank-to-ynab
 yarn
 ```
 
-`yarn` downloads all the code libraries this project depends on. This can take a minute or two.
+This creates a new folder called `sync-up-bank-to-ynab` (wherever your terminal was pointed at) containing all the
+project's files, and `yarn` downloads all the code libraries it depends on. This can take a minute or two.
 
 **You'll also need a text editor** for a couple of later steps (editing a couple of config files — not writing
-code). If you don't already have one, install [VS Code](https://code.visualstudio.com/) (free, Mac and Windows). Once
-it's installed, you can open the whole project folder in it: in VS Code, go to **File → Open Folder** (Mac:
-**File → Open...**) and select the `sync-up-bank-to-ynab` folder you just cloned. Plain text editors like TextEdit
-(Mac) or Notepad (Windows) also work, just avoid anything that auto-formats text like Word or Pages.
+code). If you don't already have one, install [VS Code](https://code.visualstudio.com/) (free, Mac and Windows).
+Once it's installed, open the project folder in it:
+
+- In VS Code, go to **File → Open Folder** (Mac: **File → Open...**).
+- In the picker that opens, navigate to wherever your terminal was pointed at when you ran `git clone` — your home
+  folder, or Desktop, or wherever you `cd`'d to — and select the `sync-up-bank-to-ynab` folder.
+- If you're not sure where it ended up, run `pwd` (Mac) or `cd` with no arguments (Windows) in the same terminal
+  window right after Step 2 — it'll print the full path you're currently in, and `sync-up-bank-to-ynab` will be a
+  folder inside it.
+
+Once it's open, you'll see a file/folder list down the left-hand side — that's how you'll get to `src/accountMapping.json`
+and `.env` in later steps. Plain text editors like TextEdit (Mac) or Notepad (Windows) also work for editing
+individual files, just avoid anything that auto-formats text like Word or Pages — you'd still need Finder/File
+Explorer to browse to the folder in that case.
 
 ---
 
