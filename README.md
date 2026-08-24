@@ -98,6 +98,12 @@ yarn
 
 `yarn` downloads all the code libraries this project depends on. This can take a minute or two.
 
+**You'll also need a text editor** for a couple of later steps (editing a couple of config files — not writing
+code). If you don't already have one, install [VS Code](https://code.visualstudio.com/) (free, Mac and Windows). Once
+it's installed, you can open the whole project folder in it: in VS Code, go to **File → Open Folder** (Mac:
+**File → Open...**) and select the `sync-up-bank-to-ynab` folder you just cloned. Plain text editors like TextEdit
+(Mac) or Notepad (Windows) also work, just avoid anything that auto-formats text like Word or Pages.
+
 ---
 
 ### Step 3 — Get your Up Bank API key
@@ -184,7 +190,8 @@ This is the "which account goes where" configuration.
    ```
    (This file is gitignored — it holds your personal account details and is never committed to the repo.)
 
-2. Open `src/accountMapping.json`. You'll want one entry for:
+2. Open `src/accountMapping.json` in your text editor (in VS Code, it'll be in the `src` folder in the sidebar on
+   the left). You'll want one entry for:
    - Your Up **transactional** account
    - A **catchall** account (for any Up Saver you don't map individually) — give this one `"upId": "UP_CATCHALL"`
    - Each individual Up **Saver** you want tracked separately in YNAB
@@ -213,7 +220,9 @@ This is the "which account goes where" configuration.
    ```
    (Also gitignored — never committed.)
 
-2. Open `.env` and fill in:
+2. Open `.env` in your text editor (it won't show up in some file browsers since it starts with a dot — in VS
+   Code's sidebar it'll still be listed, in Finder/Explorer you may need to enable "show hidden files") and fill
+   in:
    - `UP_API_KEY` — from Step 3
    - `YNAB_API_KEY` — from Step 4
    - `YNAB_BUDGET_ID` — open your budget in YNAB, the URL looks like `https://app.youneedabudget.com/<budget-id>` —
