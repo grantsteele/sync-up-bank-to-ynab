@@ -85,6 +85,16 @@ yarn --version
 Each command should print a version number. If either says "command not found," close and reopen your
 terminal/command prompt and try again — sometimes a restart is needed for the new tools to be recognised.
 
+**If the Homebrew install fails with a permissions error**, or `brew install` fails even though Homebrew is already
+installed, it's usually one of two things:
+- You're not an administrator on this Mac (Homebrew needs to create/own `/opt/homebrew` or `/usr/local`, which
+  requires admin rights) — common on work-managed machines.
+- Homebrew was previously installed using `sudo`, which leaves those folders owned by `root` instead of you.
+
+If you're not an admin on the Mac, Homebrew isn't installable at all, but you can still get Node.js without it (and
+without `sudo`) using [nvm](https://github.com/nvm-sh/nvm), which installs entirely into your home folder — follow
+its install instructions, then run `nvm install --lts` to get Node, and `corepack enable` to get Yarn.
+
 **You'll also want a text editor** for the config files you'll edit in a couple of steps (not writing code, just
 filling in values). If you don't already have one, install [VS Code](https://code.visualstudio.com/) (free, Mac and
 Windows) — plain text editors like TextEdit (Mac) or Notepad (Windows) work too, just avoid anything that
@@ -93,6 +103,15 @@ auto-formats text like Word or Pages.
 ---
 
 ### Step 2 — Download the code
+
+**If you're comfortable with a couple of terminal commands**, `git clone`-ing the repo instead of downloading a ZIP
+means you can later pull future updates with `git pull` instead of re-downloading and manually redoing your setup:
+
+```bash
+git clone https://github.com/grantsteele/sync-up-bank-to-ynab.git
+```
+
+**Otherwise, downloading a ZIP works fine too** — you just won't have an easy way to pick up future changes:
 
 1. Open the repo in your browser.
 2. Click the green **Code** button, then **Download ZIP**.
@@ -303,6 +322,13 @@ All your editing is done — this last step needs the terminal again, just to ru
 
 You're done! Spend some money on your Up card and watch it land, unapproved, in YNAB.
 
+**To check it's actually working** without waiting on a real transaction, look at the function's logs: in the AWS
+Console, search for **CloudWatch**, go to **Log groups**, and open the one named
+`/aws/lambda/up-bank-ynab-transformer-prod-upWebhookHandler`. Every time Up sends a webhook notification, a new log
+entry appears here — if a transaction isn't showing up in YNAB, this tells you whether Up ever reached your Lambda
+function at all (if nothing appears here, the problem is between Up and AWS; if something appears but errors out,
+the problem is between AWS and YNAB).
+
 **Making changes later?** You only need to run `yarn sls deploy` again — no need to repeat the webhook registration.
 
 ---
@@ -319,6 +345,14 @@ You're done! Spend some money on your Up card and watch it land, unapproved, in 
   from Step 5 were entered correctly, and that the IAM user has the `AdministratorAccess` permission attached.
 - **A command says "command not found" or "not recognized"** — close and reopen your terminal/command prompt so it
   picks up the newly installed tools, then try again.
+- **Deploy fails with a `Stack already exists` or other CloudFormation error** — this usually means a previous
+  deploy was interrupted partway through. Run `yarn sls remove` to tear down the partial deployment, then
+  `yarn sls deploy` again.
+- **The webhook was registered but nothing ever arrives** — first check the CloudWatch log group described above.
+  If it's empty even after a transaction happens, double-check the `url` you registered with Up in Step 8.5 exactly
+  matches the endpoint AWS gave you (a stray trailing slash or `http` instead of `https` will cause this). If
+  entries do appear there but error out, the issue is in the account mapping or webhook secret — see the "Nothing
+  shows up in YNAB" entry above.
 
 ---
 
