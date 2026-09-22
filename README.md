@@ -336,5 +336,6 @@ No other personal information (names, emails, tokens) is present anywhere else i
 
 ## Development
 
-This is a personal backup/fork, not actively looking for outside contributions — but feel free to open an issue if
-you spot a bug.
+This is a personal backup/fork, not actively looking for outside contributions. Bug reports are welcome via
+GitHub issues, but please note I'm not able to provide setup support — the guide above is as much help as I can
+offer.
