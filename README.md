@@ -3,9 +3,8 @@
 Automatically syncs [Up Bank](https://up.com.au) transactions into [YNAB](https://www.ynab.com/) — no manual
 importing, ever again.
 
-This is a private fork of [daveallie/up-bank-ynab-transformer](https://github.com/daveallie/up-bank-ynab-transformer),
-maintained independently as a personal backup with a few behavioural changes on top of the original (see
-[CHANGES.md](CHANGES.md)).
+This is a fork of [daveallie/up-bank-ynab-transformer](https://github.com/daveallie/up-bank-ynab-transformer),
+maintained independently with a few behavioural changes on top of the original (see [CHANGES.md](CHANGES.md)).
 
 ## What it does, in plain English
 
@@ -95,9 +94,7 @@ auto-formats text like Word or Pages.
 
 ### Step 2 — Download the code
 
-This repo is private, so you'll need to be logged into GitHub as the account it's shared with to download it.
-
-1. Open the repo in your browser: `<this-repo-url>`.
+1. Open the repo in your browser.
 2. Click the green **Code** button, then **Download ZIP**.
 3. Find the downloaded ZIP (usually in your **Downloads** folder) and extract/unzip it. On Mac, just double-click
    it. On Windows, right-click it and choose **Extract All...**.
