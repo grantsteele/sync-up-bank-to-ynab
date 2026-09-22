@@ -30,6 +30,10 @@ it yourself.
 This guide assumes no prior AWS experience. It's broken into small steps — work through them in order and you'll
 have this running in well under an hour.
 
+**Prefer working on paper?** [setup-checklist.pdf](setup-checklist.pdf) is a printable A4 checklist covering every
+step below, with space to jot down each key/ID as you collect it. It holds real secrets once filled in, so shred it
+once you're done setting up.
+
 ### What you'll need before you start
 
 | Thing | What it's for | Cost |
@@ -104,8 +108,13 @@ auto-formats text like Word or Pages.
 
 ### Step 2 — Download the code
 
+Before you start, decide where this project folder is going to live long-term (e.g. a folder in your
+**Documents**) — you'll be coming back into it for every step below, and again in future whenever you want to make
+changes or redeploy, so it's worth settling its home now rather than moving it around later.
+
 **If you're comfortable with a couple of terminal commands**, `git clone`-ing the repo instead of downloading a ZIP
-means you can later pull future updates with `git pull` instead of re-downloading and manually redoing your setup:
+means you can later pull future updates with `git pull` instead of re-downloading and manually redoing your setup.
+In your terminal, navigate to wherever you want the project folder to live, then run:
 
 ```bash
 git clone https://github.com/grantsteele/sync-up-bank-to-ynab.git
@@ -117,8 +126,8 @@ git clone https://github.com/grantsteele/sync-up-bank-to-ynab.git
 2. Click the green **Code** button, then **Download ZIP**.
 3. Find the downloaded ZIP (usually in your **Downloads** folder) and extract/unzip it. On Mac, just double-click
    it. On Windows, right-click it and choose **Extract All...**.
-4. Move the extracted folder somewhere you'll remember, e.g. your **Desktop** — you'll be going back into it in
-   every step from here on.
+4. Move the extracted folder to the place you decided on above (e.g. your **Documents** folder) — not somewhere
+   temporary like Downloads, since this is where the project will stay.
 
 Now open that folder in your text editor so you can browse and edit its files:
 
