@@ -246,7 +246,8 @@ This is the "which account goes where" configuration.
      account you _haven't_ mapped individually, so it's a safety net for accounts you open later or forget to add.
      **You can skip this entry entirely if you're going to map every single Up account you have individually** —
      just remember any new Up Saver you open in future will need its own entry added, since there won't be a
-     catchall to fall back to.
+     catchall to fall back to (see
+     [Adding, removing or changing Up accounts](#adding-removing-or-changing-up-accounts)).
 
    The `name` field is just a label for your own reference — it isn't used by the code.
 
@@ -476,7 +477,40 @@ directly without involving Up, so it doesn't tell you whether your webhook is se
 instead.
 
 **Making changes later?** Edit `.env` or `src/accountMapping.json`, then run `yarn sls deploy` again — no need to
-repeat the webhook registration.
+repeat the webhook registration. If you've opened, closed or renamed an Up account, see
+[Adding, removing or changing Up accounts](#adding-removing-or-changing-up-accounts).
+
+---
+
+## Adding, removing or changing Up accounts
+
+Your webhook automatically covers every account you have with Up, including ones you open later — so you never need
+to register it again. What decides where each account's transactions land in YNAB is `src/accountMapping.json`,
+and any change you make to that file only takes effect once you run `yarn sls deploy`.
+
+| What changed in Up                                           | What to do                                                                                                                                                                         |
+| ------------------------------------------------------------ | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| **Opened a new account or Saver — and you have a catchall**  | Nothing required — its transactions go to your catchall YNAB account automatically. If you'd rather track it separately, follow the steps below.                                   |
+| **Opened a new account or Saver — and you have no catchall** | **You must add it** (steps below), or add a catchall. Until you do, every transaction on that account fails and never reaches YNAB (Up's delivery log will show a `502` for them). |
+| **Renamed an account**                                       | Nothing — Up account IDs never change. The `name` in `accountMapping.json` is only a label for you, so update it if you like, but you don't need to redeploy for it.               |
+| **Closed an account**                                        | Nothing required — you can leave its entry in `accountMapping.json`, it does no harm. In YNAB, close the matching account when its balance is zero.                                |
+| **Want an account to go to a different YNAB account**        | Change its `ynabId` in `accountMapping.json` and redeploy. Transactions already in YNAB stay where they are — only new ones go to the new account.                                 |
+
+**To add an Up account so it's tracked separately in YNAB:**
+
+1. In YNAB, create the account it should go into (or pick an existing one).
+2. Get the new Up account's ID with the command from [Step 6.3](#step-6--tell-the-project-which-up-accounts-map-to-which-ynab-accounts) —
+   look for its `displayName`.
+3. Get the YNAB account's ID from its address in your browser, as in Step 6.5.
+4. Add a new entry for it to `src/accountMapping.json` — copy an existing `{ ... }` block, paste it after the last
+   one, and remember the comma between blocks (see the example at the end of Step 6).
+5. Open a terminal in the project folder (as in Step 8.1) and run:
+   ```bash
+   yarn sls deploy
+   ```
+
+Transactions that happened on the account before you deployed aren't sent again, so add any you need to YNAB by
+hand.
 
 ---
 
@@ -527,6 +561,9 @@ repeat the webhook registration.
   `yarn` and `yarn sls deploy`. Your endpoint URL and webhook stay the same, so there's no need to re-register
   anything. If it still happens, the CloudWatch logs (see [Check it's working](#check-its-working)) will show the
   actual error.
+- **Transactions on a new Up account or Saver aren't showing up** — if you don't have a catchall, a new account
+  needs its own entry in `accountMapping.json` before its transactions can sync. See
+  [Adding, removing or changing Up accounts](#adding-removing-or-changing-up-accounts).
 - **Card purchases aren't showing up** — they won't until they settle, usually 1–3 days later. See the note after
   Step 8.7.
 - **Nothing shows up in YNAB** — double check `src/accountMapping.json` has the right Up/YNAB account IDs, and that
