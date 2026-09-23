@@ -103,6 +103,25 @@ class Sheet:
         self.c = canvas.Canvas(path, pagesize=A4)
         self.c.setTitle("Up Bank to YNAB Sync - Setup Checklist")
         self.y = TOP
+        self.field_names = set()
+
+    def field_name(self, label):
+        """A unique, stable form-field name derived from its label."""
+        base = re.sub(r"[^a-z0-9]+", "_", label.lower()).strip("_")
+        name, n = base, 2
+        while name in self.field_names:
+            name, n = f"{base}_{n}", n + 1
+        self.field_names.add(name)
+        return name
+
+    def text_input(self, name, x, y, width, height, tooltip, font_size=0):
+        # Transparent, borderless, so it prints as a plain line/cell. Keys can be long (Up's are ~135
+        # characters), so allow plenty; font_size=0 lets the viewer shrink long values to fit.
+        self.c.acroForm.textfield(
+            name=name, tooltip=tooltip, x=x, y=y, width=width, height=height,
+            fillColor=None, borderWidth=0, textColor=TEXT, fontName="Helvetica", fontSize=font_size,
+            maxlen=1000, annotationFlags="print",
+        )
 
     def new_page(self):
         self.c.showPage()
@@ -172,7 +191,9 @@ class Sheet:
         warn = (
             "This sheet will hold real API keys and secrets once filled in. Treat it like a password: don't "
             "photograph it, leave it out, or leave it lying around once you're finished. Shred it (or securely "
-            "dispose of it) once your setup is working and you no longer need to refer back to it."
+            "dispose of it) once your setup is working and you no longer need to refer back to it. You can also "
+            "fill it in on screen and paste keys straight in \u2014 but if you save it, keep it out of synced "
+            "folders (Dropbox, iCloud, OneDrive) and delete it once you're done."
         )
         pad = 10
         top = self.y
@@ -207,9 +228,11 @@ class Sheet:
     def checkbox(self, text):
         self.need(24)
         c = self.c
-        c.setStrokeColor(TEXT)
-        c.setLineWidth(0.8)
-        c.rect(MARGIN_X, self.y - 2, 10, 10, fill=0, stroke=1)
+        c.acroForm.checkbox(
+            name=self.field_name("check " + text), tooltip=text.replace("`", ""), x=MARGIN_X, y=self.y - 2, size=10,
+            buttonStyle="check", borderColor=TEXT, fillColor=None, textColor=TEXT, borderWidth=0.8,
+            fieldFlags="", annotationFlags="print", forceBorder=True,
+        )
         self.rich_text(MARGIN_X + 25, self.y, text, 9.5, TEXT)
         self.y -= 24
 
@@ -224,6 +247,9 @@ class Sheet:
             c.setFont("Helvetica", 7.5)
             c.setFillColor(FAINT)
             c.drawString(x, self.y, f"({hint})")
+        # Keys and IDs shrink to fit; anything with a short example value (e.g. the region) stays a normal size.
+        size = 10 if hint and hint.startswith("e.g.") else 0
+        self.text_input(self.field_name(label), MARGIN_X, self.y - 20, CONTENT_W, 14, label, size)
         self.y -= 22
         self.rule(gap_after=14)
 
@@ -249,6 +275,15 @@ class Sheet:
             c.drawString(x + 6, top - row_h + 7, name)
             x += w * frac
         c.line(x0 + w, top, x0 + w, top - (rows + 1) * row_h)
+        for r in range(1, rows + 1):
+            x = x0
+            for name, frac in cols:
+                cell_w = w * frac
+                self.text_input(
+                    self.field_name(f"{name} row {r}"), x + 2, top - (r + 1) * row_h + 2, cell_w - 4, row_h - 4,
+                    f"{name} (row {r})", 9 if name == "Account name" else 0,
+                )
+                x += cell_w
         self.y = top - (rows + 1) * row_h - 36
 
     def footer_note(self):

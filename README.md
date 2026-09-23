@@ -30,9 +30,11 @@ it yourself.
 This guide assumes no prior AWS experience. It's broken into small steps — work through them in order and you'll
 have this running in well under an hour.
 
-**Prefer working on paper?** [setup-checklist.pdf](setup-checklist.pdf) is a printable A4 checklist covering every
-step below, with space to jot down each key/ID as you collect it. It holds real secrets once filled in, so shred it
-once you're done setting up.
+**Want a checklist to work through?** [setup-checklist.pdf](setup-checklist.pdf) covers every step below, with space
+for each key/ID as you collect it. Print it and write on it, or fill it in on screen — the boxes and fields are
+clickable, so you can paste keys straight in. It holds real secrets once filled in: shred a printed copy when you're
+done, and if you save a filled-in copy, keep it out of synced folders (Dropbox, iCloud, OneDrive) and delete it
+once setup is working.
 
 ### What you'll need before you start
 
