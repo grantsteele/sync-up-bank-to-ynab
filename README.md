@@ -367,9 +367,9 @@ All your editing is done — this last step needs the terminal again, just to ru
    Copy just the URL — starting from `https://` and ending with `/webhook/up`. **Don't** include the
    `endpoint: POST - ` part in front of it. This is the address Up will send transaction notifications to.
 
-   You may also see some red TypeScript errors mentioning `SaveTransaction` and a yellow warning about "Package
-   patterns" further up in the output. These are harmless — as long as it ends with "Service deployed", the deploy
-   worked.
+   Just above it, the `upWebhookHandler` line should show a size of a few hundred kB. If it's tiny (tens of kB),
+   you're running an old copy of this project whose deploys leave out the code's libraries — see the "`502`"
+   entry in [Troubleshooting](#troubleshooting).
 
 5. Register that address with Up as a webhook. This is one long command — paste it into your terminal as a single
    line. Replace `<UP_API_KEY>` with your Up key and `<ENDPOINT>` with the URL from the previous step, and leave
@@ -496,6 +496,13 @@ repeat the webhook registration.
   with exactly one.
 - **I registered the wrong URL** — webhooks can't be edited. Delete it (as above) and register it again with the
   right URL (Steps 8.5–8.7).
+- **The webhook delivery log shows `"statusCode":502`** — the function is crashing before it can respond. The
+  most common cause is an old copy of this project: its deploys left out the libraries the code needs when used
+  with newer versions of npm, so the function crashes as soon as it runs. Get the latest version of the project
+  (`git pull`, or download the ZIP again and copy your `.env` and `src/accountMapping.json` into it), then run
+  `yarn` and `yarn sls deploy`. Your endpoint URL and webhook stay the same, so there's no need to re-register
+  anything. If it still happens, the CloudWatch logs (see [Check it's working](#check-its-working)) will show the
+  actual error.
 - **Card purchases aren't showing up** — they won't until they settle, usually 1–3 days later. See the note after
   Step 8.7.
 - **Nothing shows up in YNAB** — double check `src/accountMapping.json` has the right Up/YNAB account IDs, and that

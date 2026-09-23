@@ -29,6 +29,12 @@ original at the point this repo was created.
 
 - **AWS region changed** to `ap-southeast-2` (was `us-east-1`) in `serverless.yml`.
 - Removed the now-unnecessary `lambdaHashingVersion` setting.
+- **Build switched from `serverless-plugin-typescript` to `serverless-esbuild`**, which bundles the code and its
+  libraries into a single file. With newer npm versions, Serverless v3's dev-dependency exclusion runs
+  `npm ls --prod`, which npm now rejects; Serverless then treats every package as a dev dependency and ships a
+  function with no `node_modules`, which crashes on load (`Cannot find module 'up-bank-api'`, surfacing as a 502 to
+  Up). Bundling sidesteps that check entirely. esbuild doesn't type-check, so run `npx tsc --noEmit` if you want
+  type errors reported.
 
 ## Non-behavioural
 

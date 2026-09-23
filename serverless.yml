@@ -14,7 +14,17 @@ provider:
 
 plugins:
   - serverless-dotenv-plugin
-  - serverless-plugin-typescript
+  - serverless-esbuild
+
+custom:
+  esbuild:
+    # Bundle the code and its libraries into a single file, so packaging doesn't
+    # depend on Serverless working out which node_modules to include (which
+    # breaks with newer npm versions and ships a function missing its libraries).
+    bundle: true
+    minify: false
+    sourcemap: true
+    target: node16
 
 functions:
   upWebhookHandler:
