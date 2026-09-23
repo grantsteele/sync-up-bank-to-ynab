@@ -441,7 +441,7 @@ You should get back something like this (trimmed down):
 **2. Send a test ping**, replacing `<WEBHOOK_ID>` with your webhook ID:
 
 ```bash
-curl -X POST https://api.up.com.au/api/v1/webhooks/<WEBHOOK_ID>/ping -H "Authorization: Bearer <UP_API_KEY>"
+curl -X POST https://api.up.com.au/api/v1/webhooks/<WEBHOOK_ID>/ping -d "" -H "Authorization: Bearer <UP_API_KEY>"
 ```
 
 **3. Check whether it got through** by looking at the webhook's delivery log:
