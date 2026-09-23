@@ -379,7 +379,8 @@ All your editing is done — this last step needs the terminal again, just to ru
    curl https://api.up.com.au/api/v1/webhooks -X POST -H "Authorization: Bearer <UP_API_KEY>" -H "Content-Type: application/json" -d "{\"data\":{\"attributes\":{\"url\":\"<ENDPOINT>\",\"description\":\"Prod YNAB webhook\"}}}"
    ```
 
-   Only run this once — running it again registers a second webhook, and you'll get every transaction twice. (Not
+   Only run this once — running it again registers a second webhook with a different secret, which will fail on
+   every delivery and make testing confusing. (Not
    sure if it worked? Use the "list your webhooks" command [below](#check-its-working) to check before trying
    again.)
 
@@ -434,7 +435,8 @@ You should get back something like this (trimmed down):
   from Step 6 — they look similar, but those identify your bank accounts, not the webhook.
 - Check the `url` exactly matches the endpoint from Step 8.4.
 - If you get `"data":[]` instead, no webhook is registered — go back and do Steps 8.5–8.7.
-- If there's more than one entry, you've registered more than once — see [Troubleshooting](#troubleshooting).
+- If there's more than one entry, only one of them is working — see "I've got more than one webhook" in
+  [Troubleshooting](#troubleshooting) to work out which one to keep.
 
 **2. Send a test ping**, replacing `<WEBHOOK_ID>` with your webhook ID:
 
@@ -489,11 +491,29 @@ repeat the webhook registration.
   [Check it's working](#check-its-working). If it returns `"data":[]`, nothing is registered — redo Steps 8.5–8.7.
   If there's already an entry, check its `url` is correct rather than registering another one.
 - **"What's my webhook ID?"** — see step 1 of [Check it's working](#check-its-working).
-- **I registered the webhook more than once / transactions are coming through twice** — list your webhooks, then
-  delete the extras with the delete command from [Starting over or uninstalling](#starting-over-or-uninstalling)
-  (step 2), keeping only the one whose `secretKey` is in your `.env`. You can't see a webhook's `secretKey` after
-  it's created, so if you're not sure which one that is, delete them all, redo Steps 8.5–8.7, and you'll end up
-  with exactly one.
+- **I've got more than one webhook — which one do I keep?** Only one of them can be working: each webhook gets its
+  own secret, and only the one whose `secretKey` is in your `.env` gets through. The others fail on every
+  delivery, and pinging the wrong one makes a working setup look broken. To find the right one:
+
+  1. Run the "list your webhooks" command from [Check it's working](#check-its-working). Any webhook whose `url`
+     doesn't **exactly** match the endpoint from your latest `yarn sls deploy` is left over (e.g. from an old
+     deployment) — you can delete it.
+  2. For each remaining webhook, send a ping and then check its delivery log (steps 2 and 3 of
+     [Check it's working](#check-its-working)), and look at the `"statusCode"` of the newest entry:
+
+     | Status        | What it means                                                                      |
+     | ------------- | ---------------------------------------------------------------------------------- |
+     | `200`         | **This is the one to keep** — its secret matches your `.env` and it's delivering.  |
+     | `403`         | Its secret doesn't match your `.env` — usually an earlier registration. Delete it. |
+     | `500` / `502` | The URL is wrong or the deployment is broken — see the other entries on this list. |
+
+  3. Delete every webhook except the `200` one, using the delete command from
+     [Starting over or uninstalling](#starting-over-or-uninstalling) (step 2). List your webhooks again to confirm
+     only one is left.
+
+  If **none** of them get a `200` (e.g. they're all `403`), there's no way to tell which secret is in your `.env`,
+  since Up only shows a `secretKey` once. Delete them all, redo Steps 8.5–8.7, and you'll end up with exactly one.
+
 - **I registered the wrong URL** — webhooks can't be edited. Delete it (as above) and register it again with the
   right URL (Steps 8.5–8.7).
 - **The webhook delivery log shows `"statusCode":502`** — the function is crashing before it can respond. The
