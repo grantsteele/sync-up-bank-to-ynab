@@ -358,6 +358,10 @@ All your editing is done — this last step needs the terminal again, just to ru
    This is the Serverless Framework packaging up the code and creating everything it needs in AWS. It can take a
    few minutes the first time.
 
+   Near the start it prints a yellow `Warning: Invalid configuration encountered` mentioning `provider.runtime`.
+   That's expected and harmless — the deploy tool is just older than the version of Node.js this project runs on in
+   AWS.
+
 4. When it finishes, look for a line starting with `endpoint:` that looks like:
 
    ```

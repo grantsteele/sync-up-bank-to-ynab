@@ -29,6 +29,9 @@ original at the point this repo was created.
 
 - **AWS region changed** to `ap-southeast-2` (was `us-east-1`) in `serverless.yml`.
 - Removed the now-unnecessary `lambdaHashingVersion` setting.
+- **Lambda runtime upgraded to `nodejs24.x`** (was `nodejs16.x`), since AWS blocks creating Node 16 functions from
+  1 Feb 2027 and updating them from 3 Mar 2027. Serverless v3's config schema predates Node 24, so deploys print a
+  harmless `provider.runtime` validation warning.
 - **Build switched from `serverless-plugin-typescript` to `serverless-esbuild`**, which bundles the code and its
   libraries into a single file. With newer npm versions, Serverless v3's dev-dependency exclusion runs
   `npm ls --prod`, which npm now rejects; Serverless then treats every package as a dev dependency and ships a

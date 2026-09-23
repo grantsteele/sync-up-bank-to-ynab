@@ -5,7 +5,9 @@ useDotenv: true
 
 provider:
   name: aws
-  runtime: nodejs16.x
+  # Serverless v3 predates Node 24, so deploys print a harmless "Invalid configuration
+  # encountered ... provider.runtime" warning. AWS supports nodejs24.x until mid-2028.
+  runtime: nodejs24.x
   stage: prod
   region: ap-southeast-2
   logRetentionInDays: 90
@@ -24,7 +26,7 @@ custom:
     bundle: true
     minify: false
     sourcemap: true
-    target: node16
+    target: node24
 
 functions:
   upWebhookHandler:
