@@ -443,6 +443,57 @@ number`** — the command's quotes got mangled, so your API key never reached Up
 
 ---
 
+## Starting over or uninstalling
+
+**Just trying to fix something?** You probably don't need to start over. Edit `.env` or `src/accountMapping.json`
+and run `yarn sls deploy` again from the same folder — it updates your existing setup in place and keeps the same
+URL, so your Up webhook keeps working.
+
+**To remove everything** (or tear it down before setting it up again from scratch), do these in order.
+
+**Deleting the project folder on its own doesn't remove anything from AWS** — your function keeps running and Up
+keeps sending it notifications.
+
+1. **Remove everything from AWS.** Open a terminal inside the project folder (same as Step 8.1) and run:
+
+   ```bash
+   yarn sls remove
+   ```
+
+   This deletes everything the deploy created: the Lambda function, the webhook URL, its CloudWatch logs, and the
+   storage AWS used for deploying. It needs the project folder to still exist, so do this before deleting it.
+
+   _Already deleted the folder?_ Do it in the AWS Console instead: search for **CloudFormation**, check the region in
+   the top-right matches the one you deployed to (Sydney, unless you changed it), select the
+   `up-bank-ynab-transformer-prod` stack, and click **Delete**.
+
+2. **Delete the webhook from Up**, so Up stops trying to send notifications to a URL that no longer exists. Get its
+   `id` with the "list your webhooks" command from the end of Step 8, then run:
+
+   ```bash
+   curl -X DELETE https://api.up.com.au/api/v1/webhooks/<WEBHOOK_ID> -H "Authorization: Bearer <UP_API_KEY>"
+   ```
+
+   Run the "list your webhooks" command again afterwards — it should return `"data":[]`.
+
+3. **Delete the project folder.** If you're going to set it up again, first save a copy of `.env` and
+   `src/accountMapping.json` somewhere safe — they hold all your keys and IDs, and you can drop them straight into
+   the fresh copy instead of redoing Steps 6 and 7. (Clear out `UP_WEBHOOK_SECRET` in the saved `.env`, though — the
+   new webhook you register will come with a new one.) These files contain real API keys, so delete that copy once
+   you're done.
+
+**These don't need removing** if you're setting up again:
+
+- Your AWS account, IAM user and `aws configure` credentials — reuse them as-is. (If you're uninstalling for good
+  and want to tidy up, you can delete the IAM user from Step 5 in the AWS Console under **IAM → Users**.)
+- Your Up and YNAB API keys — these keep working. (Uninstalling for good? You can revoke the YNAB one under
+  **Account Settings → Developer Settings** in YNAB, and generate a new Up one at
+  [api.up.com.au](https://api.up.com.au) to invalidate the old one.)
+- Transactions already imported into YNAB — they stay where they are. If any come through again after you set it
+  back up, they're recognised as duplicates and skipped.
+
+---
+
 ## Personalisation that was stripped out of this repo
 
 This repo started as a personal project, so the following files/values were removed before it was made available
