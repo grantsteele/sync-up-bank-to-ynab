@@ -260,6 +260,16 @@ This is the "which account goes where" configuration.
    (if you're using one). If you've already got matching YNAB accounts set up (e.g. from manually tracking these
    before), you don't need to create new ones — just use your existing accounts in the next step.
 
+   Several mappings can point at the **same** YNAB account if you'd rather not track them separately — e.g. giving
+   the catchall the same `ynabId` as your transactional account, so everything you haven't mapped individually lands
+   there. If you do this, keep in mind:
+
+   - Transfers between two Up accounts that share a YNAB account won't appear in YNAB at all. That's deliberate —
+     the money never left that YNAB account, so its balance is still right — but it can look like a transfer went
+     missing.
+   - That YNAB account's balance will be the combined total of all the Up accounts pointing at it, so it won't match
+     any single balance in the Up app.
+
 5. For each YNAB account, open it and look at the URL — it'll look like
    `https://app.youneedabudget.com/<budget-id>/accounts/<account-id>`. Copy the `<account-id>` part into `ynabId`
    for the matching mapping.
