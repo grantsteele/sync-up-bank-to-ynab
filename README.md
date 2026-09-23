@@ -36,11 +36,11 @@ once you're done setting up.
 
 ### What you'll need before you start
 
-| Thing | What it's for | Cost |
-|---|---|---|
-| A Mac or Windows computer | To run the setup commands | — |
-| An [Up Bank](https://up.com.au) account | The bank you're syncing from | Free |
-| A [YNAB](https://www.ynab.com/) account | The budget you're syncing to | Paid (YNAB subscription) |
+| Thing                                     | What it's for                                     | Cost                                                                                    |
+| ----------------------------------------- | ------------------------------------------------- | --------------------------------------------------------------------------------------- |
+| A Mac or Windows computer                 | To run the setup commands                         | —                                                                                       |
+| An [Up Bank](https://up.com.au) account   | The bank you're syncing from                      | Free                                                                                    |
+| A [YNAB](https://www.ynab.com/) account   | The budget you're syncing to                      | Paid (YNAB subscription)                                                                |
 | An [AWS](https://aws.amazon.com/) account | Hosts the small bit of code that does the syncing | Free — this project runs comfortably within AWS's free tier, so it should cost $0/month |
 
 You do **not** need to already have Node.js or Yarn installed — Step 1 below installs them from scratch. If
@@ -91,6 +91,7 @@ terminal/command prompt and try again — sometimes a restart is needed for the 
 
 **If the Homebrew install fails with a permissions error**, or `brew install` fails even though Homebrew is already
 installed, it's usually one of two things:
+
 - You're not an administrator on this Mac (Homebrew needs to create/own `/opt/homebrew` or `/usr/local`, which
   requires admin rights) — common on work-managed machines.
 - Homebrew was previously installed using `sudo`, which leaves those folders owned by `root` instead of you.
@@ -172,6 +173,7 @@ which means creating an AWS account and a set of "access keys."
 
 2. **Create an IAM user with access keys.** This is a set of credentials that let tools like Serverless act on your
    AWS account without using your main login.
+
    - In the AWS Console, search for **IAM** and open it.
    - Go to **Users** → **Create user**. Give it a name like `up-ynab-deploy`.
    - Attach the permission **AdministratorAccess** (simplest option for a personal project like this — it lets the
@@ -182,31 +184,36 @@ which means creating an AWS account and a set of "access keys."
      once.
 
 3. **Install the AWS CLI** (a command-line tool for talking to AWS) if you don't have it:
+
    - Mac: `brew install awscli`
    - Otherwise, follow https://docs.aws.amazon.com/cli/latest/userguide/getting-started-install.html
 
 4. **Tell the AWS CLI your credentials:**
+
    ```bash
    aws configure
    ```
+
    It'll ask you for:
+
    - **AWS Access Key ID** — paste the one from step 2
    - **AWS Secret Access Key** — paste the one from step 2
    - **Default region name** — this just picks which AWS data centre your code runs in; pick whichever is closest
      to you for the best performance, or use `ap-southeast-2` (Sydney) to match this project's default. Some
      common ones:
 
-     | Region code | Location |
-     |---|---|
-     | `ap-southeast-2` | Sydney |
-     | `us-east-1` | N. Virginia, USA |
-     | `us-west-2` | Oregon, USA |
-     | `eu-west-1` | Ireland |
-     | `eu-central-1` | Frankfurt, Germany |
-     | `ap-southeast-1` | Singapore |
-     | `ap-south-1` | Mumbai, India |
+     | Region code      | Location           |
+     | ---------------- | ------------------ |
+     | `ap-southeast-2` | Sydney             |
+     | `us-east-1`      | N. Virginia, USA   |
+     | `us-west-2`      | Oregon, USA        |
+     | `eu-west-1`      | Ireland            |
+     | `eu-central-1`   | Frankfurt, Germany |
+     | `ap-southeast-1` | Singapore          |
+     | `ap-south-1`     | Mumbai, India      |
 
      For the full list, see AWS's [Regions and Zones reference](https://docs.aws.amazon.com/AWSEC2/latest/UserGuide/using-regions-availability-zones.html#concepts-available-regions).
+
    - **Default output format** — you can just press Enter to leave this blank
 
 That's it — AWS is now set up, and the Serverless Framework will use these credentials automatically when you
@@ -228,20 +235,25 @@ This is the "which account goes where" configuration.
 
 2. Open `accountMapping.json` in your text editor (in VS Code, it'll be in the `src` folder in the sidebar on
    the left). You'll want one entry for:
+
    - Your Up **transactional** account
    - Each individual Up **Saver** you want tracked separately in YNAB
    - A **catchall** account — give this one `"upId": "UP_CATCHALL"`. This is where transactions land for any Up
-     account you *haven't* mapped individually, so it's a safety net for accounts you open later or forget to add.
+     account you _haven't_ mapped individually, so it's a safety net for accounts you open later or forget to add.
      **You can skip this entry entirely if you're going to map every single Up account you have individually** —
      just remember any new Up Saver you open in future will need its own entry added, since there won't be a
      catchall to fall back to.
 
    The `name` field is just a label for your own reference — it isn't used by the code.
 
-3. Get your Up account IDs by running (replace `<UP_API_KEY>` with the key from Step 3):
+3. Get your Up account IDs by running this in a terminal (Mac: **Terminal**; Windows: **Command Prompt** — not
+   PowerShell). Replace `<UP_API_KEY>` with the key from Step 3, including the `<` and `>`, so it ends up looking
+   like `"Authorization: Bearer up:yeah:abc123..."`:
+
    ```bash
-   curl https://api.up.com.au/api/v1/accounts -G -H 'Authorization: Bearer <UP_API_KEY>'
+   curl https://api.up.com.au/api/v1/accounts -G -H "Authorization: Bearer <UP_API_KEY>"
    ```
+
    This lists all your Up accounts along with their `id`. Copy the relevant `id` into `upId` for each mapping.
 
 4. In YNAB, you need an account for each mapping: the Up transactional account, each mapped Saver, and the catchall
@@ -259,6 +271,7 @@ This is the "which account goes where" configuration.
 1. In the project's top-level folder, find `.env.example` and make a copy of it named `.env` (also gitignored —
    never committed). Files starting with a dot are treated as "hidden" by Mac/Windows, which makes copying them in
    Finder/File Explorer fiddly, so it's easiest to do this from your text editor instead:
+
    - **VS Code**: open `.env.example`, then use **File → Save As...**, and save it as `.env` in the same folder
      (just change the filename, don't change the folder).
    - **TextEdit/Notepad**: open `.env.example`, use **Save As...**, and save as `.env` in the same folder — on
@@ -281,62 +294,105 @@ This is the "which account goes where" configuration.
 All your editing is done — this last step needs the terminal again, just to run a couple of commands.
 
 1. Open a terminal/command prompt **inside the project folder** (rather than opening a blank one and typing `cd`):
+
    - **Mac**: right-click the project folder → **Services → New Terminal at Folder**. If you don't see that
      option, open Terminal normally and drag the project folder from Finder onto the Terminal window — it'll fill
      in the full path for you — then press Enter.
    - **Windows**: open the project folder in File Explorer, click the address bar, type `cmd`, and press Enter.
 
 2. Install the project's dependencies:
+
    ```bash
    yarn
    ```
+
    This can take a minute or two.
 
 3. Deploy:
+
    ```bash
    yarn sls deploy
    ```
+
    This is the Serverless Framework packaging up the code and creating everything it needs in AWS. It can take a
    few minutes the first time.
 
-4. When it finishes, look for a line under `endpoints` that looks like:
-   ```
-   POST - https://xxxxxx.execute-api.ap-southeast-2.amazonaws.com/prod/webhook/up
-   ```
-   Copy that whole URL — this is the address Up will send transaction notifications to.
+4. When it finishes, look for a line starting with `endpoint:` that looks like:
 
-5. Register that address with Up as a webhook (replace `<UP_API_KEY>` and `<ENDPOINT>` with your values):
-   ```bash
-   curl https://api.up.com.au/api/v1/webhooks \
-     -XPOST \
-     -H 'Authorization: Bearer <UP_API_KEY>' \
-     -H 'Content-Type: application/json' \
-     --data-binary '{
-       "data": {
-         "attributes": {
-           "url": "<ENDPOINT>",
-           "description": "Prod YNAB webhook"
-         }
-       }
-     }'
    ```
+   endpoint: POST - https://xxxxxx.execute-api.ap-southeast-2.amazonaws.com/prod/webhook/up
+   ```
+
+   Copy just the URL — starting from `https://` and ending with `/webhook/up`. **Don't** include the
+   `endpoint: POST - ` part in front of it. This is the address Up will send transaction notifications to.
+
+   You may also see some red TypeScript errors mentioning `SaveTransaction` and a yellow warning about "Package
+   patterns" further up in the output. These are harmless — as long as it ends with "Service deployed", the deploy
+   worked.
+
+5. Register that address with Up as a webhook. This is one long command — paste it into your terminal as a single
+   line. Replace `<UP_API_KEY>` with your Up key and `<ENDPOINT>` with the URL from the previous step (replacing
+   the `<` and `>` too), and leave all the `\"` characters exactly as they are:
+
+   ```bash
+   curl https://api.up.com.au/api/v1/webhooks -X POST -H "Authorization: Bearer <UP_API_KEY>" -H "Content-Type: application/json" -d "{\"data\":{\"attributes\":{\"url\":\"<ENDPOINT>\",\"description\":\"Prod YNAB webhook\"}}}"
+   ```
+
+   Only run this once — running it again registers a second webhook, and you'll get every transaction twice.
 
 6. The response includes a `secretKey` — copy it into `UP_WEBHOOK_SECRET` in your `.env` file (back in your text
-   editor).
+   editor). If the response instead starts with `{"errors":`, the registration didn't work — see
+   [Troubleshooting](#troubleshooting).
 
 7. Deploy one more time so the webhook secret takes effect:
    ```bash
    yarn sls deploy
    ```
 
-You're done! Spend some money on your Up card and watch it land, unapproved, in YNAB.
+You're done! Spend some money on your Up card and it'll land, unapproved, in YNAB.
 
-**To check it's actually working** without waiting on a real transaction, look at the function's logs: in the AWS
-Console, search for **CloudWatch**, go to **Log groups**, and open the one named
-`/aws/lambda/up-bank-ynab-transformer-prod-upWebhookHandler`. Every time Up sends a webhook notification, a new log
-entry appears here — if a transaction isn't showing up in YNAB, this tells you whether Up ever reached your Lambda
-function at all (if nothing appears here, the problem is between Up and AWS; if something appears but errors out,
-the problem is between AWS and YNAB).
+**Card purchases don't appear straight away.** When you tap your card, Up first records the purchase as _pending_
+(Up calls this "held"). This project deliberately waits until the purchase **settles** before adding it to YNAB —
+usually 1–3 days for card purchases — so it doesn't create a duplicate when the final amount comes through.
+Transfers and payments that settle instantly show up within seconds. So if you've just bought a coffee to test it,
+don't worry if it isn't in YNAB yet.
+
+**To check it's actually working** without waiting on a real transaction, ask Up to send a test "ping" to your
+webhook. First, list your webhooks to get its `id` (and to double-check the `url` Up has on file):
+
+```bash
+curl https://api.up.com.au/api/v1/webhooks -H "Authorization: Bearer <UP_API_KEY>"
+```
+
+Then send the ping, replacing `<WEBHOOK_ID>` with the `id` from that response:
+
+```bash
+curl -X POST https://api.up.com.au/api/v1/webhooks/<WEBHOOK_ID>/ping -H "Authorization: Bearer <UP_API_KEY>"
+```
+
+To see whether Up's deliveries are succeeding, check the webhook's delivery log — a `statusCode` of `200` means your
+function accepted it, `403` means the webhook secret doesn't match:
+
+```bash
+curl https://api.up.com.au/api/v1/webhooks/<WEBHOOK_ID>/logs -H "Authorization: Bearer <UP_API_KEY>"
+```
+
+You can also look at the function's own logs: in the AWS Console, search for **CloudWatch**, go to **Log groups**,
+and open the one named `/aws/lambda/up-bank-ynab-transformer-prod-upWebhookHandler`. Every time Up sends a webhook
+notification, a new log entry appears here. Each one starts with a `Webhook: {...}` line showing what Up sent — the
+line after it tells you what happened:
+
+| Log line                                                                | What it means                                                                                                      |
+| ----------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------ |
+| `Skipping HELD transaction`                                             | Working as intended — the purchase is still pending and will appear in YNAB once it settles.                       |
+| `Invalid signature`                                                     | `UP_WEBHOOK_SECRET` in `.env` doesn't match the `secretKey` from Step 8.6. Fix it and run `yarn sls deploy` again. |
+| `Creating transaction` / `Updating transaction` followed by `YNAB save` | It's been sent to YNAB — look for it (unapproved) in the account you mapped.                                       |
+| `Skipping negative side of internal transfer`                           | Expected — for transfers between your own Up accounts, only one side is sent to YNAB, and YNAB creates the other.  |
+| An error mentioning YNAB (e.g. `404` or `401`)                          | Check `YNAB_API_KEY` and `YNAB_BUDGET_ID` in `.env`, and the `ynabId` values in `accountMapping.json`.             |
+
+Note that the **Test** button in the Lambda section of the AWS Console isn't a useful check — it runs the function
+directly without involving Up, so it doesn't tell you whether your webhook is set up correctly. Use the ping above
+instead.
 
 **Making changes later?** You only need to run `yarn sls deploy` again — no need to repeat the webhook registration.
 
@@ -348,6 +404,17 @@ the problem is between AWS and YNAB).
   Serverless Framework sets up a Lambda function (the code that runs) and an API Gateway (the URL that Up sends
   notifications to) for you. If you're curious, you can see them by searching "Lambda" or "API Gateway" in the AWS
   Console, but there's nothing you need to configure by hand there.
+- **A `curl` command gives `Not Authorized`, `Could not resolve host: Bearer`, or `Port number was not a decimal
+number`** — the command's quotes got mangled, so your API key never reached Up. Make sure you're using the
+  double quotes (`"`) exactly as shown in this guide — not single quotes (`'`), which Windows Command Prompt doesn't
+  understand, and not "smart" curly quotes (`“ ”`), which some apps swap in when you copy and paste. On Windows,
+  use Command Prompt rather than PowerShell. Also check the key comes straight after `Bearer ` with a single space.
+- **Not sure whether the webhook was ever registered** — run the "list your webhooks" command from the
+  [check it's working](#step-8--install-dependencies-and-deploy) section. If it returns `"data":[]`, nothing is
+  registered — redo Step 8.5–8.7. If there's already an entry, check its `url` is correct rather than registering
+  another one.
+- **Card purchases aren't showing up** — they won't until they settle, usually 1–3 days later. See the note at the
+  end of Step 8.
 - **Nothing shows up in YNAB** — double check `src/accountMapping.json` has the right Up/YNAB account IDs, and that
   `UP_WEBHOOK_SECRET` in `.env` matches the `secretKey` from Up's webhook registration response, then redeploy.
 - **`aws configure` / deploy fails with a permissions or credentials error** — re-check the Access Key ID/Secret
@@ -359,7 +426,8 @@ the problem is between AWS and YNAB).
   `yarn sls deploy` again.
 - **The webhook was registered but nothing ever arrives** — first check the CloudWatch log group described above.
   If it's empty even after a transaction happens, double-check the `url` you registered with Up in Step 8.5 exactly
-  matches the endpoint AWS gave you (a stray trailing slash or `http` instead of `https` will cause this). If
+  matches the endpoint AWS gave you — it should start with `https://` and end with `/webhook/up`, with no
+  `POST - ` in front and no trailing slash (the "list your webhooks" command shows what Up has on file). If
   entries do appear there but error out, the issue is in the account mapping or webhook secret — see the "Nothing
   shows up in YNAB" entry above.
 
