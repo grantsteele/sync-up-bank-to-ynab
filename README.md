@@ -46,10 +46,14 @@ once you're done setting up.
 You do **not** need to already have Node.js or Yarn installed — Step 1 below installs them from scratch. If
 "Lambda" and "serverless" are unfamiliar terms, don't worry, that's exactly what Step 5 walks through.
 
-This guide keeps the terminal to a minimum — you'll only use it for one-off tool installs, a couple of quick API
-lookups (copy-paste commands, no editing involved), and the final deploy step. All the file editing (downloading
-the code, filling in your account details) is done in Finder/File Explorer and a regular text editor instead, since
-that's a much easier way to work with files if you're not used to a terminal.
+This guide keeps the terminal to a minimum — you'll only use it for one-off tool installs, a few quick API lookups
+(copy-paste commands where you just fill in your own key or ID), and the deploy step. All the file editing
+(downloading the code, filling in your account details) is done in Finder/File Explorer and a regular text editor
+instead, since that's a much easier way to work with files if you're not used to a terminal.
+
+**Anything in `<ANGLE_BRACKETS>` is a placeholder.** Replace the whole thing, brackets included, with your own
+value — e.g. `Bearer <UP_API_KEY>` becomes `Bearer up:yeah:abc123...`. Everything else in a command stays exactly
+as written, including the double quotes.
 
 ---
 
@@ -151,7 +155,7 @@ Once it's open in VS Code, you'll see a file/folder list down the left-hand side
 
 ### Step 4 — Get your YNAB API key
 
-1. Go to https://app.youneedabudget.com/settings/developer.
+1. Go to https://app.ynab.com/settings/developer.
 2. Click **New Token**, confirm your password, and copy the token that's shown. YNAB only shows it once, so keep
    it handy.
 
@@ -246,15 +250,23 @@ This is the "which account goes where" configuration.
 
    The `name` field is just a label for your own reference — it isn't used by the code.
 
-3. Get your Up account IDs by running this in a terminal (Mac: **Terminal**; Windows: **Command Prompt** — not
-   PowerShell). Replace `<UP_API_KEY>` with the key from Step 3, including the `<` and `>`, so it ends up looking
-   like `"Authorization: Bearer up:yeah:abc123..."`:
+3. Get your Up account IDs. Open a terminal (Mac: **Terminal**; Windows: **Command Prompt** — not PowerShell) and
+   run this, replacing `<UP_API_KEY>` with your key from Step 3:
 
    ```bash
-   curl https://api.up.com.au/api/v1/accounts -G -H "Authorization: Bearer <UP_API_KEY>"
+   curl https://api.up.com.au/api/v1/accounts -g -G -d "page[size]=100" -H "Authorization: Bearer <UP_API_KEY>"
    ```
 
-   This lists all your Up accounts along with their `id`. Copy the relevant `id` into `upId` for each mapping.
+   You'll get back one long block of text covering every account you have with Up. Each account in it looks like
+   this (trimmed down):
+
+   ```
+   {"type":"accounts","id":"1a2b3c4d-1234-5678-9abc-def012345678","attributes":{"displayName":"Spending","accountType":"TRANSACTIONAL",...
+   ```
+
+   `displayName` is the account's name as shown in the Up app (your main account is called "Spending"), and the
+   `id` just before it is what goes into `upId`. It's easiest to paste the whole output into your text editor and
+   search for `displayName` to step through each account.
 
 4. In YNAB, you need an account for each mapping: the Up transactional account, each mapped Saver, and the catchall
    (if you're using one). If you've already got matching YNAB accounts set up (e.g. from manually tracking these
@@ -270,9 +282,27 @@ This is the "which account goes where" configuration.
    - That YNAB account's balance will be the combined total of all the Up accounts pointing at it, so it won't match
      any single balance in the Up app.
 
-5. For each YNAB account, open it and look at the URL — it'll look like
-   `https://app.youneedabudget.com/<budget-id>/accounts/<account-id>`. Copy the `<account-id>` part into `ynabId`
-   for the matching mapping.
+5. For each YNAB account, open it in YNAB in your web browser and look at the address bar — it'll look like
+   `https://app.ynab.com/<budget-id>/accounts/<account-id>`. Copy the `<account-id>` part (everything after
+   `/accounts/`) into `ynabId` for the matching mapping.
+
+   When you're done, your `accountMapping.json` should look something like this — one `{ ... }` block per mapping,
+   separated by commas, with no comma after the last one:
+
+   ```json
+   [
+     {
+       "name": "Up Spending",
+       "upId": "1a2b3c4d-1234-5678-9abc-def012345678",
+       "ynabId": "9f8e7d6c-1234-5678-9abc-def012345678"
+     },
+     {
+       "name": "Up Catchall",
+       "upId": "UP_CATCHALL",
+       "ynabId": "5a6b7c8d-1234-5678-9abc-def012345678"
+     }
+   ]
+   ```
 
 ---
 
@@ -293,8 +323,9 @@ This is the "which account goes where" configuration.
 2. Open `.env` in your text editor and fill in:
    - `UP_API_KEY` — from Step 3
    - `YNAB_API_KEY` — from Step 4
-   - `YNAB_BUDGET_ID` — open your budget in YNAB, the URL looks like `https://app.youneedabudget.com/<budget-id>` —
-     copy the `<budget-id>` part
+   - `YNAB_BUDGET_ID` — open your budget in YNAB in your web browser; the address bar will show something like
+     `https://app.ynab.com/<budget-id>/budget` — copy the `<budget-id>` part (the long string straight after
+     `app.ynab.com/`)
    - Leave `UP_WEBHOOK_SECRET` blank for now — you'll fill this in during Step 8
 
 ---
@@ -341,17 +372,32 @@ All your editing is done — this last step needs the terminal again, just to ru
    worked.
 
 5. Register that address with Up as a webhook. This is one long command — paste it into your terminal as a single
-   line. Replace `<UP_API_KEY>` with your Up key and `<ENDPOINT>` with the URL from the previous step (replacing
-   the `<` and `>` too), and leave all the `\"` characters exactly as they are:
+   line. Replace `<UP_API_KEY>` with your Up key and `<ENDPOINT>` with the URL from the previous step, and leave
+   all the `\"` characters exactly as they are:
 
    ```bash
    curl https://api.up.com.au/api/v1/webhooks -X POST -H "Authorization: Bearer <UP_API_KEY>" -H "Content-Type: application/json" -d "{\"data\":{\"attributes\":{\"url\":\"<ENDPOINT>\",\"description\":\"Prod YNAB webhook\"}}}"
    ```
 
-   Only run this once — running it again registers a second webhook, and you'll get every transaction twice.
+   Only run this once — running it again registers a second webhook, and you'll get every transaction twice. (Not
+   sure if it worked? Use the "list your webhooks" command [below](#check-its-working) to check before trying
+   again.)
 
-6. The response includes a `secretKey` — copy it into `UP_WEBHOOK_SECRET` in your `.env` file (back in your text
-   editor). If the response instead starts with `{"errors":`, the registration didn't work — see
+6. The response will look something like this (trimmed down):
+
+   ```
+   {"data":{"type":"webhooks","id":"7e6d5c4b-1234-5678-9abc-def012345678","attributes":{"url":"https://...","description":"Prod YNAB webhook","secretKey":"AbCdEf123...",...
+   ```
+
+   Two values in it matter:
+
+   - **`secretKey`** — copy this into `UP_WEBHOOK_SECRET` in your `.env` file (back in your text editor). This is
+     the only time Up will ever show it to you.
+   - **`id`** (the one straight after `"type":"webhooks"`) — this is your **webhook ID**. You don't need it for
+     setup, but it's handy to note down: the testing and removal commands later in this guide ask for it as
+     `<WEBHOOK_ID>`. If you lose it, you can always look it up again [below](#check-its-working).
+
+   If the response instead starts with `{"errors":`, the registration didn't work — see
    [Troubleshooting](#troubleshooting).
 
 7. Deploy one more time so the webhook secret takes effect:
@@ -367,27 +413,46 @@ usually 1–3 days for card purchases — so it doesn't create a duplicate when 
 Transfers and payments that settle instantly show up within seconds. So if you've just bought a coffee to test it,
 don't worry if it isn't in YNAB yet.
 
-**To check it's actually working** without waiting on a real transaction, ask Up to send a test "ping" to your
-webhook. First, list your webhooks to get its `id` (and to double-check the `url` Up has on file):
+#### Check it's working
+
+You don't have to wait for a real transaction to test it — you can ask Up to send a test "ping" to your webhook.
+
+**1. List your webhooks** to find your webhook ID and check the address Up has on file:
 
 ```bash
 curl https://api.up.com.au/api/v1/webhooks -H "Authorization: Bearer <UP_API_KEY>"
 ```
 
-Then send the ping, replacing `<WEBHOOK_ID>` with the `id` from that response:
+You should get back something like this (trimmed down):
+
+```
+{"data":[{"type":"webhooks","id":"7e6d5c4b-1234-5678-9abc-def012345678","attributes":{"url":"https://xxxxxx.execute-api.ap-southeast-2.amazonaws.com/prod/webhook/up","description":"Prod YNAB webhook",...
+```
+
+- Your **webhook ID** is the `id` straight after `"type":"webhooks"` — in this example,
+  `7e6d5c4b-1234-5678-9abc-def012345678`. It's the same ID from Step 8.6. Don't mix it up with your Up account IDs
+  from Step 6 — they look similar, but those identify your bank accounts, not the webhook.
+- Check the `url` exactly matches the endpoint from Step 8.4.
+- If you get `"data":[]` instead, no webhook is registered — go back and do Steps 8.5–8.7.
+- If there's more than one entry, you've registered more than once — see [Troubleshooting](#troubleshooting).
+
+**2. Send a test ping**, replacing `<WEBHOOK_ID>` with your webhook ID:
 
 ```bash
 curl -X POST https://api.up.com.au/api/v1/webhooks/<WEBHOOK_ID>/ping -H "Authorization: Bearer <UP_API_KEY>"
 ```
 
-To see whether Up's deliveries are succeeding, check the webhook's delivery log — a `statusCode` of `200` means your
-function accepted it, `403` means the webhook secret doesn't match:
+**3. Check whether it got through** by looking at the webhook's delivery log:
 
 ```bash
 curl https://api.up.com.au/api/v1/webhooks/<WEBHOOK_ID>/logs -H "Authorization: Bearer <UP_API_KEY>"
 ```
 
-You can also look at the function's own logs: in the AWS Console, search for **CloudWatch**, go to **Log groups**,
+Look for `"statusCode"` in the newest entry (the first one listed): `200` means everything's connected properly.
+`403` means `UP_WEBHOOK_SECRET` in your `.env` doesn't match the `secretKey` from Step 8.6 — fix it and run
+`yarn sls deploy` again.
+
+**For more detail**, you can look at the function's own logs: in the AWS Console, search for **CloudWatch**, go to **Log groups**,
 and open the one named `/aws/lambda/up-bank-ynab-transformer-prod-upWebhookHandler`. Every time Up sends a webhook
 notification, a new log entry appears here. Each one starts with a `Webhook: {...}` line showing what Up sent — the
 line after it tells you what happened:
@@ -404,7 +469,8 @@ Note that the **Test** button in the Lambda section of the AWS Console isn't a u
 directly without involving Up, so it doesn't tell you whether your webhook is set up correctly. Use the ping above
 instead.
 
-**Making changes later?** You only need to run `yarn sls deploy` again — no need to repeat the webhook registration.
+**Making changes later?** Edit `.env` or `src/accountMapping.json`, then run `yarn sls deploy` again — no need to
+repeat the webhook registration.
 
 ---
 
@@ -414,17 +480,24 @@ instead.
   Serverless Framework sets up a Lambda function (the code that runs) and an API Gateway (the URL that Up sends
   notifications to) for you. If you're curious, you can see them by searching "Lambda" or "API Gateway" in the AWS
   Console, but there's nothing you need to configure by hand there.
-- **A `curl` command gives `Not Authorized`, `Could not resolve host: Bearer`, or `Port number was not a decimal
-number`** — the command's quotes got mangled, so your API key never reached Up. Make sure you're using the
+- **A `curl` command gives `Not Authorized`, `Could not resolve host`, or a `Port number` error** — the command's
+  quotes got mangled, so your API key never reached Up. Make sure you're using the
   double quotes (`"`) exactly as shown in this guide — not single quotes (`'`), which Windows Command Prompt doesn't
   understand, and not "smart" curly quotes (`“ ”`), which some apps swap in when you copy and paste. On Windows,
   use Command Prompt rather than PowerShell. Also check the key comes straight after `Bearer ` with a single space.
-- **Not sure whether the webhook was ever registered** — run the "list your webhooks" command from the
-  [check it's working](#step-8--install-dependencies-and-deploy) section. If it returns `"data":[]`, nothing is
-  registered — redo Step 8.5–8.7. If there's already an entry, check its `url` is correct rather than registering
-  another one.
-- **Card purchases aren't showing up** — they won't until they settle, usually 1–3 days later. See the note at the
-  end of Step 8.
+- **Not sure whether the webhook was ever registered** — run the "list your webhooks" command from
+  [Check it's working](#check-its-working). If it returns `"data":[]`, nothing is registered — redo Steps 8.5–8.7.
+  If there's already an entry, check its `url` is correct rather than registering another one.
+- **"What's my webhook ID?"** — see step 1 of [Check it's working](#check-its-working).
+- **I registered the webhook more than once / transactions are coming through twice** — list your webhooks, then
+  delete the extras with the delete command from [Starting over or uninstalling](#starting-over-or-uninstalling)
+  (step 2), keeping only the one whose `secretKey` is in your `.env`. You can't see a webhook's `secretKey` after
+  it's created, so if you're not sure which one that is, delete them all, redo Steps 8.5–8.7, and you'll end up
+  with exactly one.
+- **I registered the wrong URL** — webhooks can't be edited. Delete it (as above) and register it again with the
+  right URL (Steps 8.5–8.7).
+- **Card purchases aren't showing up** — they won't until they settle, usually 1–3 days later. See the note after
+  Step 8.7.
 - **Nothing shows up in YNAB** — double check `src/accountMapping.json` has the right Up/YNAB account IDs, and that
   `UP_WEBHOOK_SECRET` in `.env` matches the `secretKey` from Up's webhook registration response, then redeploy.
 - **`aws configure` / deploy fails with a permissions or credentials error** — re-check the Access Key ID/Secret
@@ -434,7 +507,8 @@ number`** — the command's quotes got mangled, so your API key never reached Up
 - **Deploy fails with a `Stack already exists` or other CloudFormation error** — this usually means a previous
   deploy was interrupted partway through. Run `yarn sls remove` to tear down the partial deployment, then
   `yarn sls deploy` again.
-- **The webhook was registered but nothing ever arrives** — first check the CloudWatch log group described above.
+- **The webhook was registered but nothing ever arrives** — first check the CloudWatch log group described in
+  [Check it's working](#check-its-working).
   If it's empty even after a transaction happens, double-check the `url` you registered with Up in Step 8.5 exactly
   matches the endpoint AWS gave you — it should start with `https://` and end with `/webhook/up`, with no
   `POST - ` in front and no trailing slash (the "list your webhooks" command shows what Up has on file). If
@@ -468,7 +542,7 @@ keeps sending it notifications.
    `up-bank-ynab-transformer-prod` stack, and click **Delete**.
 
 2. **Delete the webhook from Up**, so Up stops trying to send notifications to a URL that no longer exists. Get its
-   `id` with the "list your webhooks" command from the end of Step 8, then run:
+   webhook ID with the "list your webhooks" command from [Check it's working](#check-its-working), then run:
 
    ```bash
    curl -X DELETE https://api.up.com.au/api/v1/webhooks/<WEBHOOK_ID> -H "Authorization: Bearer <UP_API_KEY>"
